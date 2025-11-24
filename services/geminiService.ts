@@ -169,10 +169,15 @@ export const generatePost = async (
           }
         } catch (imgError: any) {
           console.error("Image Generation Failed:", imgError);
-          if (imgError.message?.includes('403') || imgError.message?.includes('permission')) {
-             imageError = "Permission Denied: Check your API Key.";
-          } else if (imgError.message?.includes('404') || imgError.message?.includes('not found')) {
-             imageError = "Model Not Found: Your key may not support this model.";
+          
+          let errString = JSON.stringify(imgError);
+          if (imgError.message) errString += " " + imgError.message;
+          if (imgError.response?.data) errString += " " + JSON.stringify(imgError.response.data);
+
+          if (errString.includes('403') || errString.includes('PERMISSION_DENIED') || errString.includes('permission')) {
+             imageError = "Permission Denied: Your API key cannot access 'Nano Banana Pro'. Try using 'Nano Banana (Fast)' in settings.";
+          } else if (errString.includes('404') || errString.includes('not found')) {
+             imageError = "Model Not Found: Model not enabled for this API key. Try 'Nano Banana (Fast)'.";
           } else {
              imageError = "Generation Failed: " + (imgError.message || "Unknown error");
           }
