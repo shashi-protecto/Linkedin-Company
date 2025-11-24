@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { generatePost } from './services/geminiService';
 import PostPreview from './components/PostPreview';
 import SettingsModal from './components/SettingsModal';
@@ -10,16 +10,34 @@ import {
   SettingsIcon
 } from './components/Icons';
 
+const STORAGE_KEY = 'protecto_social_settings_v1';
+
 function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Settings State
+  // Settings State - Initialize from LocalStorage if available
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [appSettings, setAppSettings] = useState<AppSettings>({
-    apiKey: '',
-    modelTier: ModelTier.Flash,
-    imageModelTier: ImageModelTier.NanoBanana // Default to fast image model
+  const [appSettings, setAppSettings] = useState<AppSettings>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error("Failed to load settings from storage", e);
+    }
+    // Default fallback
+    return {
+      apiKey: '',
+      modelTier: ModelTier.Flash,
+      imageModelTier: ImageModelTier.NanoBanana
+    };
   });
+
+  const handleSaveSettings = (newSettings: AppSettings) => {
+    setAppSettings(newSettings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
+  };
 
   const [state, setState] = useState<GeneratorState>({
     topic: '',
@@ -120,7 +138,7 @@ function App() {
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)}
         settings={appSettings}
-        onSave={setAppSettings}
+        onSave={handleSaveSettings}
       />
 
       {/* Header */}
